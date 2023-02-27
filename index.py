@@ -25,8 +25,16 @@ import os
 
 from tkinter import *
 from tkinter import ttk
- 
- 
+
+
+def get_abspath(name):
+    return os.path.abspath(name)
+
+def add(index, name):
+    index += 1
+    file_listbox.insert(index, name)
+    return index
+
 def select():
     global cur_dir
 
@@ -39,22 +47,26 @@ def select():
 
     if selected in drives:
         selected += '/'
-        cur_dir = os.path.abspath(selected)
+        cur_dir = get_abspath(selected)
+        pre_list.append('..')
+        temp_list = os.listdir(cur_dir)
+    elif len(cur_dir) == 3 and selected == '..':
+        cur_dir = ''
+        temp_list = drives
     else:
-        cur_dir = os.path.abspath(cur_dir + '/' + selected)
+        cur_dir = get_abspath(cur_dir + '/' + selected)
+        pre_list.append('..')
+        temp_list = os.listdir(cur_dir)
 
     print(cur_dir)
 
-    pre_list.append('..')
-    temp_list = os.listdir(cur_dir)
     cur_list = pre_list + temp_list
     file_listbox.delete(0, END)
-    i = 0
 
+    i = 0
     for item in cur_list:
-        if os.path.isdir(os.path.abspath(cur_dir + '/' + item)):
-            i += 1
-            file_listbox.insert(i, item)
+        if cur_dir == '' or os.path.isdir(get_abspath(cur_dir + '/' + item)):
+            i = add(i, item)
 
     print(cur_list)
  
@@ -76,9 +88,7 @@ drives = [ chr(x) + ":" for x in range(65,91) if os.path.exists(chr(x) + ":") ]
 
 # создаем список
 cur_dir = ''
-# cur_list = os.listdir(cur_dir)
-cur_list = drives
-list_var = Variable(value=cur_list)
+list_var = Variable(value=drives)
 file_listbox = Listbox(listvariable=list_var)
 file_listbox.grid(row=1, column=0, columnspan=2, sticky=EW, padx=5, pady=5)
  
