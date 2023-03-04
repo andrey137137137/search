@@ -7,13 +7,17 @@ def get_abspath(dir, name = ''):
     return os.path.abspath(dir + '/' + name)
 
 def search_file(path, name):
+    print(path)
+    print(os.listdir(path))
     for item in os.listdir(path):
+        print(item)
         if item == name and os.path.isfile(item):
             print('Name: ', name)
             print('Size: ', os.path.getsize(item))
             print('Path: ', os.path.abspath(item))
             return
-        search_file(os.path.abspath(item), name)
+        elif os.path.isdir(item):
+            search_file(os.path.abspath(item), name)
 
 def get_file_selected():
     selection = file_listbox.curselection()
@@ -26,27 +30,54 @@ def search():
         return
 
     selected = get_file_selected()
-    search_file(set_cur_dir(selected), name)
+    set_cur_dir(selected)
+
+    if cur_dir == '':
+        return
+
+    search_file(cur_dir, name)
 
 def add(index, name):
     index += 1
     file_listbox.insert(index, name)
     return index
 
+def get_path(root, dir):
+    if dir in drives:
+        return get_abspath(dir)
+
+    if len(root) == 3 and dir == '..':
+        return ''
+
+    path = get_abspath(root, dir)
+
+    if os.path.isfile(path):
+        print(os.path.getsize(path))
+
+    return path
+
 def set_cur_dir(dir):
     global cur_dir
 
-    if dir in drives:
-        cur_dir = get_abspath(dir)
-    elif len(cur_dir) == 3 and dir == '..':
-        cur_dir = ''
-    else:
-        path = get_abspath(cur_dir, dir)
-        if not os.path.isdir(path):
-            if os.path.isfile(path):
-                print(os.path.getsize(path))
-            return False
-        cur_dir = path
+    # if dir in drives:
+    #     cur_dir = get_abspath(dir)
+    # elif len(cur_dir) == 3 and dir == '..':
+    #     cur_dir = ''
+    # else:
+    #     path = get_abspath(cur_dir, dir)
+    #     if not os.path.isdir(path):
+    #         if os.path.isfile(path):
+    #             print(os.path.getsize(path))
+    #         return False
+    #     cur_dir = path
+    # return True
+
+    path = get_path(cur_dir, dir)
+
+    if not path == '' and not os.path.isdir(path):
+        return False
+
+    cur_dir = path
     return True
 
 def set_cur_list():
@@ -104,6 +135,7 @@ file_listbox.grid(row=1, column=0, columnspan=2, sticky=EW, padx=5, pady=5)
 # file_listbox.insert(END, "C#")
  
 ttk.Button(text="Перейти в папку", command=select).grid(row=2, column=1, padx=5, pady=5)
+ttk.Button(text="Найти", command=search).grid(row=0, column=1, padx=5, pady=5)
 
 tree = ttk.Treeview()
 # установка заголовка
