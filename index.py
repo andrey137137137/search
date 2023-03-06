@@ -6,18 +6,18 @@ from tkinter import ttk
 def get_abspath(dir, name = ''):
     return os.path.abspath(dir + '/' + name)
 
-def search_file(path, name):
-    print(path)
-    print(os.listdir(path))
-    for item in os.listdir(path):
-        print(item)
-        if item == name and os.path.isfile(item):
+def search_file(root, name):
+    print(root)
+    for item in os.listdir(root):
+        path = get_abspath(root, item)
+        print(path)
+        if item == name and os.path.isfile(path):
             print('Name: ', name)
-            print('Size: ', os.path.getsize(item))
-            print('Path: ', os.path.abspath(item))
+            print('Size: ', os.path.getsize(path))
+            print('Path: ', os.path.abspath(path))
             return
-        elif os.path.isdir(item):
-            search_file(os.path.abspath(item), name)
+        elif os.path.isdir(path):
+            search_file(path, name)
 
 def get_file_selected():
     selection = file_listbox.curselection()
