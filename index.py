@@ -21,6 +21,10 @@ def search_file(root, name):
 
 def get_file_selected():
     selection = file_listbox.curselection()
+    
+    if len(selection) == 0:
+        return ''
+
     return file_listbox.get(selection[0])
 
 def search():
@@ -30,9 +34,13 @@ def search():
         return
 
     selected = get_file_selected()
+
+    if not selected:
+        return
+
     set_cur_dir(selected)
 
-    if cur_dir == '':
+    if not cur_dir:
         return
 
     search_file(cur_dir, name)
@@ -57,7 +65,7 @@ def get_path(root, dir):
     return path
 
 def set_cur_dir(dir):
-    global cur_dir
+    global cur_dir, prev_cur_dir
 
     # if dir in drives:
     #     cur_dir = get_abspath(dir)
@@ -77,16 +85,22 @@ def set_cur_dir(dir):
     if not path == '' and not os.path.isdir(path):
         return False
 
+    prev_cur_dir = cur_dir
     cur_dir = path
     return True
 
 def set_cur_list():
-    global cur_list
+    global cur_dir, cur_list, prev_cur_list
 
     if cur_dir == '':
         cur_list = drives
     else:
-        cur_list = ['..'] + os.listdir(cur_dir)
+        try:
+            prev_cur_list = cur_list
+            cur_list = ['..'] + os.listdir(cur_dir)
+        except:
+            cur_dir = prev_cur_dir
+            cur_list = prev_cur_list
 
 def select():
     selected = get_file_selected()
@@ -124,8 +138,8 @@ file_entry.grid(column=0, row=0, padx=6, pady=6, sticky=EW)
 drives = [ chr(x) + ":" for x in range(65,91) if os.path.exists(chr(x) + ":") ]
 
 # создаем список
-cur_dir = ''
-cur_list = drives
+cur_dir = prev_cur_dir = ''
+cur_list = prev_cur_list = drives
 list_var = Variable(value=cur_list)
 file_listbox = Listbox(listvariable=list_var)
 file_listbox.grid(row=1, column=0, columnspan=2, sticky=EW, padx=5, pady=5)
