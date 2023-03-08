@@ -7,17 +7,28 @@ def get_abspath(dir, name = ''):
     return os.path.abspath(dir + '/' + name)
 
 def search_file(root, name):
+    global deep_counter
+    print(deep_counter)
     print(root)
-    for item in os.listdir(root):
-        path = get_abspath(root, item)
-        print(path)
-        if item == name and os.path.isfile(path):
-            print('Name: ', name)
-            print('Size: ', os.path.getsize(path))
-            print('Path: ', os.path.abspath(path))
-            return
-        elif os.path.isdir(path):
-            search_file(path, name)
+    if deep_counter >= deep:
+        return
+    try:
+        for item in os.listdir(root):
+            path = get_abspath(root, item)
+            print(path)
+            print(item)
+            if item == name and os.path.isfile(path):
+                print('Name: ', name)
+                print('Size: ', os.path.getsize(path))
+                print('Path: ', os.path.abspath(path))
+                deep_counter = deep
+                return
+            if os.path.isdir(path):
+                search_file(path, name)
+    except:
+        return
+    finally:
+        deep_counter += 1
 
 def get_file_selected():
     selection = file_listbox.curselection()
@@ -134,7 +145,9 @@ root.rowconfigure(index=2, weight=1)
 file_entry = ttk.Entry()
 file_entry.grid(column=0, row=0, padx=6, pady=6, sticky=EW)
 # ttk.Button(text="Добавить", command=add).grid(column=1, row=0, padx=6, pady=6)
- 
+
+deep = 10
+deep_counter = 0
 drives = [ chr(x) + ":" for x in range(65,91) if os.path.exists(chr(x) + ":") ]
 
 # создаем список
