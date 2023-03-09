@@ -1,7 +1,20 @@
 import os
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
+from tkinter import filedialog as fd
 
+
+def show_message(str, type = 'w'):
+    if type == 'i':
+        return messagebox.showinfo(str)
+    if type == 'w':
+        return messagebox.showwarning(str)
+    messagebox.showerror(str)
+
+def select_file_name():
+    global file_name
+    file_name = fd.askopenfilename()
 
 def get_abspath(dir, name = ''):
     return os.path.abspath(dir + '/' + name)
@@ -34,14 +47,16 @@ def get_file_selected():
     selection = file_listbox.curselection()
     
     if len(selection) == 0:
+        show_message('Выберите директорию')
         return ''
 
     return file_listbox.get(selection[0])
 
 def search():
-    name = file_entry.get()
+    global deep_counter
 
-    if name == '':
+    if file_name == '':
+        show_message('Выберите файл')
         return
 
     selected = get_file_selected()
@@ -52,9 +67,11 @@ def search():
     set_cur_dir(selected)
 
     if not cur_dir:
+        show_message('Директория не выбрана')
         return
 
-    search_file(cur_dir, name)
+    deep_counter = 0
+    search_file(cur_dir, file_name)
 
 def add(index, name):
     index += 1
@@ -110,6 +127,7 @@ def set_cur_list():
             prev_cur_list = cur_list
             cur_list = ['..'] + os.listdir(cur_dir)
         except:
+            show_message('Невозможно открыть директорию: ' + cur_dir, 'e')
             cur_dir = prev_cur_dir
             cur_list = prev_cur_list
 
@@ -142,8 +160,7 @@ root.rowconfigure(index=1, weight=3)
 root.rowconfigure(index=2, weight=1)
  
 # текстовое поле и кнопка для добавления в список
-file_entry = ttk.Entry()
-file_entry.grid(column=0, row=0, padx=6, pady=6, sticky=EW)
+file_select = ttk.Button(text="Выбрать файл", command=select_file_name).grid(column=0, row=0, padx=6, pady=6, sticky=EW)
 # ttk.Button(text="Добавить", command=add).grid(column=1, row=0, padx=6, pady=6)
 
 deep = 10
@@ -151,7 +168,7 @@ deep_counter = 0
 drives = [ chr(x) + ":" for x in range(65,91) if os.path.exists(chr(x) + ":") ]
 
 # создаем список
-cur_dir = prev_cur_dir = ''
+cur_dir = prev_cur_dir = file_name = ''
 cur_list = prev_cur_list = drives
 list_var = Variable(value=cur_list)
 file_listbox = Listbox(listvariable=list_var)
