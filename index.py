@@ -20,7 +20,7 @@ def select_file_name():
     file_mtime = os.path.getmtime(temp)
 
 def get_abspath(dir, name = ''):
-    return os.path.abspath(os.path.join(dir, name))
+    return os.path.abspath(dir + '/' + name)
 
 def add_to_tree(index, text):
     if index == 0:
@@ -109,6 +109,7 @@ def add(index, name):
 
 def get_path(root, dir):
     if dir in drives:
+        print(dir)
         return get_abspath(dir)
 
     if len(root) == 3 and dir == '..':
@@ -143,6 +144,7 @@ def set_cur_dir(dir):
     # return True
 
     path = get_path(cur_dir, dir)
+    print(path)
 
     if not path == '' and not os.path.isdir(path):
         return False
@@ -170,6 +172,9 @@ def set_cur_list():
 def select():
     selected = get_file_selected()
     print(selected)
+
+    if not selected:
+        return
 
     if not set_cur_dir(selected):
         return
