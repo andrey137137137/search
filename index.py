@@ -46,25 +46,36 @@ def build_tree(path):
         i += 1
 
 def search_file(root, name):
-    global deep_counter
-    print(deep_counter)
-    print(root)
-    if deep_counter >= deep:
+    global deep_counter, is_not_found
+    if deep_counter >= deep.get():
+        # if not is_not_found:
+        #     is_not_found = True
+        #     show_message('Файл ' + name + ' не найден')
         return
     try:
+        print(deep_counter)
+        print(root)
         for item in os.listdir(root):
             path = get_abspath(root, item)
             print(path)
             print(item)
             print(name)
-            if item == name and os.path.isfile(path) and file_size == os.path.getsize(path) and file_mtime == os.path.getmtime(path):
-                print('Name: ', name)
-                print('Size: ', os.path.getsize(path))
-                print('Path: ', os.path.abspath(path))
-                show_message('Name: ' + name, 'i')
-                build_tree(path)
-                deep_counter = deep
-                return
+            if os.path.isfile(path):
+                is_found = True
+                if to_check_name.get() and not item == name:
+                    is_found = False
+                if is_found and to_check_size.get() and not file_size == os.path.getsize(path):
+                    is_found = False
+                if is_found and to_check_mtime.get() and not file_mtime == os.path.getmtime(path):
+                    is_found = False
+                if is_found:
+                    print('Name: ', name)
+                    print('Size: ', os.path.getsize(path))
+                    print('Mtime: ', os.path.getmtime(path))
+                    show_message('Name: ' + item, 'i')
+                    build_tree(path)
+                    deep_counter = deep.get()
+                    return
             if os.path.isdir(path):
                 search_file(path, name)
     except:
@@ -72,17 +83,12 @@ def search_file(root, name):
     finally:
         deep_counter += 1
 
-def get_file_selected():
-    selection = file_listbox.curselection()
-    
-    if len(selection) == 0:
-        show_message('Выберите директорию')
-        return ''
-
-    return file_listbox.get(selection[0])
-
 def search():
-    global deep_counter
+    global deep_counter, is_not_found
+
+    if not to_check_name.get() and not to_check_size.get() and not to_check_mtime.get():
+        show_message('Необходимо выбрать как минимум один параметр сравнения')
+        return
 
     if file_name == '':
         show_message('Выберите файл')
@@ -99,6 +105,7 @@ def search():
         show_message('Директория не выбрана')
         return
 
+    is_not_found = False
     deep_counter = 0
     search_file(cur_dir, file_name)
 
@@ -130,19 +137,6 @@ def set_label_value(path):
 def set_cur_dir(dir):
     global cur_dir, prev_cur_dir
 
-    # if dir in drives:
-    #     cur_dir = get_abspath(dir)
-    # elif len(cur_dir) == 3 and dir == '..':
-    #     cur_dir = ''
-    # else:
-    #     path = get_abspath(cur_dir, dir)
-    #     if not os.path.isdir(path):
-    #         if os.path.isfile(path):
-    #             print(os.path.getsize(path))
-    #         return False
-    #     cur_dir = path
-    # return True
-
     path = get_path(cur_dir, dir)
     print(path)
 
@@ -169,6 +163,15 @@ def set_cur_list():
             set_label_value(prev_cur_dir)
             cur_list = prev_cur_list
 
+def get_file_selected():
+    selection = file_listbox.curselection()
+    
+    if len(selection) == 0:
+        show_message('Выберите директорию')
+        return ''
+
+    return file_listbox.get(selection[0])
+
 def select():
     selected = get_file_selected()
     print(selected)
@@ -186,7 +189,7 @@ def select():
 
     i = 0
     for item in cur_list:
-        # if cur_dir == '' or os.path.isdir(get_abspath(cur_dir, item)):
+        if cur_dir == '' or os.path.isdir(get_abspath(cur_dir, item)):
             i = add(i, item)
 
     print(cur_list)
@@ -201,15 +204,15 @@ root.rowconfigure(index=0, weight=1)
 root.rowconfigure(index=1, weight=1)
 root.rowconfigure(index=2, weight=1)
  
-# текстовое поле и кнопка для добавления в список
 file_select = ttk.Button(text="Выбрать файл", command=select_file_name).grid(column=0, row=0, padx=6, pady=6, sticky=EW)
-# ttk.Button(text="Добавить", command=add).grid(column=1, row=0, padx=6, pady=6)
 
-deep = 10
+
+deep = IntVar(value=10)
+Entry(textvariable=deep).grid(row=2, column=2)
 deep_counter = 0
+is_not_found = False
 drives = [ chr(x) + ":" for x in range(65,91) if os.path.exists(chr(x) + ":") ]
 
-# создаем список
 file_size = 0
 cur_dir = prev_cur_dir = file_name = ''
 cur_list = prev_cur_list = drives
@@ -217,7 +220,6 @@ list_var = Variable(value=cur_list)
 file_listbox = Listbox(listvariable=list_var)
 file_listbox.grid(row=1, column=0, columnspan=2, sticky=EW, padx=5, pady=5)
  
-# добавляем в список начальные элементы
 # file_listbox.insert(END, "Python")
 # file_listbox.insert(END, "C#")
 
@@ -227,7 +229,6 @@ ttk.Button(text="Перейти в папку", command=select).grid(row=2, colu
 ttk.Button(text="Найти", command=search).grid(row=0, column=1, padx=5, pady=5)
 
 tree = ttk.Treeview()
-# установка заголовка
 # tree.heading("#0", text="Отделы", anchor=NW)
 tree.grid(row=1, column=2)
  
@@ -239,4 +240,10 @@ tree.insert(1, index=END, text="Tom")
 tree.insert(2, index=END, text="Bob")
 tree.insert(2, index=END, text="Sam")
 
+to_check_name = IntVar()
+ttk.Checkbutton(text="По имени", variable=to_check_name, state=ACTIVE).grid(row=3, column=0)
+to_check_size = IntVar()
+ttk.Checkbutton(text="По размеру", variable=to_check_size).grid(row=3, column=1)
+to_check_mtime = IntVar()
+ttk.Checkbutton(text="По дате создания", variable=to_check_mtime).grid(row=3, column=2)
 root.mainloop()
