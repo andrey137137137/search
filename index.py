@@ -13,14 +13,6 @@ def show_message(str, type="w"):
     messagebox.showerror("Ошибка", str)
 
 
-def select_file_name():
-    global file_name, file_size, file_mtime
-    temp = fd.askopenfilename()
-    file_name = os.path.basename(temp)
-    file_size = os.path.getsize(temp)
-    file_mtime = os.path.getmtime(temp)
-
-
 def get_abspath(dir, name=""):
     return os.path.abspath(dir + "/" + name)
 
@@ -124,6 +116,20 @@ def search():
         show_message("Файл " + file_name + " не найден")
 
 
+def test_file(path):
+    global file_name, file_size, file_mtime
+    file_name = os.path.basename(path)
+    file_size = os.path.getsize(path)
+    file_mtime = os.path.getmtime(path)
+    search()
+
+
+def select_file_names():
+    file_names = fd.askopenfilenames()
+    for path in file_names:
+        test_file(path)
+
+
 def add(index, name):
     index += 1
     file_listbox.insert(index, name)
@@ -162,7 +168,6 @@ def set_cur_dir(dir):
         return False
 
     prev_cur_dir = cur_dir
-    # cur_dir = path
     set_label_value(path)
     return True
 
@@ -178,7 +183,6 @@ def set_cur_list():
             cur_list = [".."] + os.listdir(cur_dir)
         except:
             show_message("Невозможно открыть директорию: " + cur_dir, "e")
-            # cur_dir = prev_cur_dir
             set_label_value(prev_cur_dir)
             cur_list = prev_cur_list
 
@@ -226,7 +230,7 @@ root.rowconfigure(index=0, weight=1)
 root.rowconfigure(index=1, weight=1)
 root.rowconfigure(index=2, weight=1)
 
-file_select = ttk.Button(text="Выбрать файл", command=select_file_name).grid(
+file_select = ttk.Button(text="Выбрать файл", command=select_file_names).grid(
     column=0, row=0, padx=6, pady=6, sticky=EW
 )
 
