@@ -1,4 +1,5 @@
 import os
+import shutil
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
@@ -27,13 +28,16 @@ def add_to_tree(index, text):
     tree.insert(parent=id, index=END, iid=iid, text=text, open=True)
 
 
+def clean_tree():
+    for item in tree.get_children(""):
+        tree.delete(item)
+
+
 def build_tree(path):
     parts = path.split("\\")
     print(len(parts))
 
-    for item in tree.get_children(""):
-        tree.delete(item)
-
+    clean_tree()
     add_to_tree(0, parts[0])
 
     i = 1
@@ -42,43 +46,53 @@ def build_tree(path):
         i += 1
 
 
+def isOnDeep():
+    return deep_counter >= deep.get()
+
+
 def search_file(root, name):
     global deep_counter, is_found
-    if deep_counter >= deep.get():
+    if isOnDeep():
         return
     try:
         print(deep_counter)
         print(root)
         for item in os.listdir(root):
+            if isOnDeep():
+                return
             path = get_abspath(root, item)
             print(path)
             print(item)
             print(name)
             if os.path.isfile(path):
                 is_found = True
-                if to_check_name.get() and not item == name:
+                if all([to_check_name.get(), not item == name]):
                     is_found = False
-                if (
-                    is_found
-                    and to_check_size.get()
-                    and not file_size == os.path.getsize(path)
+                if all(
+                    [
+                        is_found,
+                        to_check_size.get(),
+                        not file_size == os.path.getsize(path),
+                    ]
                 ):
                     is_found = False
-                if (
-                    is_found
-                    and to_check_mtime.get()
-                    and not file_mtime == os.path.getmtime(path)
+                if all(
+                    [
+                        is_found,
+                        to_check_mtime.get(),
+                        not file_mtime == os.path.getmtime(path),
+                    ]
                 ):
                     is_found = False
                 if is_found:
                     print("Name: ", name)
                     print("Size: ", os.path.getsize(path))
                     print("Mtime: ", os.path.getmtime(path))
-                    show_message("Name: " + item, "i")
+                    # show_message("Name: " + item, "i")
                     build_tree(path)
                     deep_counter = deep.get()
                     return
-            if os.path.isdir(path):
+            elif os.path.isdir(path):
                 search_file(path, name)
     except:
         return
@@ -86,15 +100,35 @@ def search_file(root, name):
         deep_counter += 1
 
 
-def search():
-    global deep_counter, is_found
+# def test_file(path):
+#     global file_name, file_size, file_mtime
+#     file_name = os.path.basename(path)
+#     file_size = os.path.getsize(path)
+#     file_mtime = os.path.getmtime(path)
+#     search()
 
-    if not to_check_name.get() and not to_check_size.get() and not to_check_mtime.get():
+
+def search(path):
+    global file_name, file_size, file_mtime, deep_counter, is_found
+
+    file_name = os.path.basename(path)
+    file_size = os.path.getsize(path)
+    file_mtime = os.path.getmtime(path)
+    is_found = False
+    deep_counter = 0
+    search_file(cur_dir, file_name)
+
+    if not is_found:
+        clean_tree()
+        shutil.copy2(path, cur_dir)
+        # show_message("Файл " + file_name + " не найден")
+
+
+def select_file_names():
+    if all(
+        [not to_check_name.get(), not to_check_size.get(), not to_check_mtime.get()]
+    ):
         show_message("Необходимо выбрать как минимум один параметр сравнения")
-        return
-
-    if file_name == "":
-        show_message("Выберите файл")
         return
 
     # selected = get_file_selected()
@@ -108,26 +142,14 @@ def search():
         show_message("Директория не выбрана")
         return
 
-    is_found = False
-    deep_counter = 0
-    search_file(cur_dir, file_name)
-
-    if not is_found:
-        show_message("Файл " + file_name + " не найден")
-
-
-def test_file(path):
-    global file_name, file_size, file_mtime
-    file_name = os.path.basename(path)
-    file_size = os.path.getsize(path)
-    file_mtime = os.path.getmtime(path)
-    search()
-
-
-def select_file_names():
     file_names = fd.askopenfilenames()
+
+    if len(file_names) == 0:
+        show_message("Выберите один или несколько файлов")
+        return
+
     for path in file_names:
-        test_file(path)
+        search(path)
 
 
 def add(index, name):
@@ -234,7 +256,7 @@ file_select = ttk.Button(text="Выбрать файл", command=select_file_nam
     column=0, row=0, padx=6, pady=6, sticky=EW
 )
 
-deep = IntVar(value=10)
+deep = IntVar(value=1000)
 Entry(textvariable=deep).grid(row=2, column=2)
 deep_counter = 0
 is_found = False
@@ -247,13 +269,10 @@ list_var = Variable(value=cur_list)
 file_listbox = Listbox(listvariable=list_var)
 file_listbox.grid(row=1, column=0, columnspan=2, sticky=EW, padx=5, pady=5)
 
-# file_listbox.insert(END, "Python")
-# file_listbox.insert(END, "C#")
-
 label_value = StringVar(value=cur_dir)
 ttk.Label(textvariable=label_value).grid(row=0, column=2)
 ttk.Button(text="Перейти в папку", command=select).grid(row=2, column=1, padx=5, pady=5)
-ttk.Button(text="Найти", command=search).grid(row=0, column=1, padx=5, pady=5)
+# ttk.Button(text="Найти", command=search).grid(row=0, column=1, padx=5, pady=5)
 
 tree = ttk.Treeview()
 # tree.heading("#0", text="Отделы", anchor=NW)
