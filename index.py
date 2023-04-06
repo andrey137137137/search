@@ -1,21 +1,24 @@
-import os
 import shutil
+
+from os import *
+from os import path as p
+
 from tkinter import *
 from tkinter import ttk
-from tkinter import messagebox
+from tkinter import messagebox as mb
 from tkinter import filedialog as fd
 
 
 def show_message(str, type="w"):
     if type == "i":
-        return messagebox.showinfo("Сообщение", str)
+        return mb.showinfo("Сообщение", str)
     if type == "w":
-        return messagebox.showwarning("Предупреждение", str)
-    messagebox.showerror("Ошибка", str)
+        return mb.showwarning("Предупреждение", str)
+    mb.showerror("Ошибка", str)
 
 
 def get_abspath(dir, name=""):
-    return os.path.abspath(dir + "/" + name)
+    return p.abspath(dir + "/" + name)
 
 
 def add_to_tree(index, text):
@@ -57,14 +60,14 @@ def search_file(root, name):
     try:
         print(deep_counter)
         print(root)
-        for item in os.listdir(root):
+        for item in listdir(root):
             if isOnDeep():
                 return
             path = get_abspath(root, item)
             print(path)
             print(item)
             print(name)
-            if os.path.isfile(path):
+            if p.isfile(path):
                 is_found = True
                 if all([to_check_name.get(), not item == name]):
                     is_found = False
@@ -72,7 +75,7 @@ def search_file(root, name):
                     [
                         is_found,
                         to_check_size.get(),
-                        not file_size == os.path.getsize(path),
+                        not file_size == p.getsize(path),
                     ]
                 ):
                     is_found = False
@@ -80,19 +83,19 @@ def search_file(root, name):
                     [
                         is_found,
                         to_check_mtime.get(),
-                        not file_mtime == os.path.getmtime(path),
+                        not file_mtime == p.getmtime(path),
                     ]
                 ):
                     is_found = False
                 if is_found:
                     print("Name: ", name)
-                    print("Size: ", os.path.getsize(path))
-                    print("Mtime: ", os.path.getmtime(path))
+                    print("Size: ", p.getsize(path))
+                    print("Mtime: ", p.getmtime(path))
                     # show_message("Name: " + item, "i")
                     build_tree(path)
                     deep_counter = deep.get()
                     return
-            elif os.path.isdir(path):
+            elif p.isdir(path):
                 search_file(path, name)
     except:
         return
@@ -102,18 +105,18 @@ def search_file(root, name):
 
 # def test_file(path):
 #     global file_name, file_size, file_mtime
-#     file_name = os.path.basename(path)
-#     file_size = os.path.getsize(path)
-#     file_mtime = os.path.getmtime(path)
+#     file_name = p.basename(path)
+#     file_size = p.getsize(path)
+#     file_mtime = p.getmtime(path)
 #     search()
 
 
 def search(path):
     global file_name, file_size, file_mtime, deep_counter, is_found
 
-    file_name = os.path.basename(path)
-    file_size = os.path.getsize(path)
-    file_mtime = os.path.getmtime(path)
+    file_name = p.basename(path)
+    file_size = p.getsize(path)
+    file_mtime = p.getmtime(path)
     is_found = False
     deep_counter = 0
     search_file(cur_dir, file_name)
@@ -168,8 +171,8 @@ def get_path(root, dir):
 
     path = get_abspath(root, dir)
 
-    if os.path.isfile(path):
-        print(os.path.getsize(path))
+    if p.isfile(path):
+        print(p.getsize(path))
 
     return path
 
@@ -186,7 +189,7 @@ def set_cur_dir(dir):
     path = get_path(cur_dir, dir)
     print(path)
 
-    if not path == "" and not os.path.isdir(path):
+    if not path == "" and not p.isdir(path):
         return False
 
     prev_cur_dir = cur_dir
@@ -202,7 +205,7 @@ def set_cur_list():
     else:
         try:
             prev_cur_list = cur_list
-            cur_list = [".."] + os.listdir(cur_dir)
+            cur_list = [".."] + listdir(cur_dir)
         except:
             show_message("Невозможно открыть директорию: " + cur_dir, "e")
             set_label_value(prev_cur_dir)
@@ -236,7 +239,7 @@ def select():
 
     i = 0
     for item in cur_list:
-        if cur_dir == "" or os.path.isdir(get_abspath(cur_dir, item)):
+        if cur_dir == "" or p.isdir(get_abspath(cur_dir, item)):
             i = add(i, item)
 
     print(cur_list)
@@ -245,6 +248,9 @@ def select():
 root = Tk()
 root.title("METANIT.COM")
 root.geometry("700x500")
+ttk.Style().configure(
+    ".", font="helvetica 13", foreground="#004D40", padding=8, background="#B2DFDB"
+)
 root.columnconfigure(index=0, weight=0)
 root.columnconfigure(index=1, weight=0)
 root.columnconfigure(index=2, weight=3)
@@ -260,7 +266,7 @@ deep = IntVar(value=1000)
 Entry(textvariable=deep).grid(row=2, column=2)
 deep_counter = 0
 is_found = False
-drives = [chr(x) + ":" for x in range(65, 91) if os.path.exists(chr(x) + ":")]
+drives = [chr(x) + ":" for x in range(65, 91) if p.exists(chr(x) + ":")]
 
 file_size = 0
 cur_dir = prev_cur_dir = file_name = ""
