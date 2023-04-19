@@ -246,7 +246,7 @@ def select():
 
 
 root = Tk()
-root.title("METANIT.COM")
+root.title("SEARCH")
 root.geometry("700x500")
 ttk.Style().configure(
     ".", font="helvetica 13", foreground="#004D40", padding=8, background="#B2DFDB"
@@ -264,14 +264,17 @@ file_select = ttk.Button(text="Выбрать файл", command=select_file_nam
 
 deep = IntVar(value=1000)
 Entry(textvariable=deep).grid(row=2, column=2)
+
 deep_counter = 0
 is_found = False
+
 drives = [chr(x) + ":" for x in range(65, 91) if p.exists(chr(x) + ":")]
 
 file_size = 0
 cur_dir = prev_cur_dir = file_name = ""
 cur_list = prev_cur_list = drives
 list_var = Variable(value=cur_list)
+
 file_listbox = Listbox(listvariable=list_var)
 file_listbox.grid(row=1, column=0, columnspan=2, sticky=EW, padx=5, pady=5)
 
